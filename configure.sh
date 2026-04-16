@@ -1,3 +1,5 @@
+#!/dev/null
+
 # PROCESSING PARAMETERS
 # first and last experiments to sum
 export FIRST=3
