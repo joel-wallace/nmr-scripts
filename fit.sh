@@ -2,7 +2,7 @@
 
 cd $WD
 
-$PYTHON $MASTER/lorentzian.py $NUM_PEAKS < $BASELINED_NAME > $FIT_NAME
+$PYTHON $MASTER/bootstrap.py $NUM_PEAKS < $BASELINED_NAME > $FIT_NAME
 
 
 gnuplot -p <<EOF
