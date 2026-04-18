@@ -3,7 +3,7 @@ import numpy as np
 import jax.numpy as jnp
 from jax import jit
 import jaxopt
-
+import jax
 # command line argument
 num_peaks = float(sys.argv[1])
 
@@ -37,7 +37,7 @@ def loss_function(params, x, y):
     current_fit = sum_lorentzians(params, x)
     return jnp.sum((current_fit - y)**2)
 
-# initial guesses
+# user guesses
 p0 = jnp.array([50, -61.75, 0.2, 20, -62.75, 0.15, 10, -61.75, 0.8, 10, -62.75, 0.8])
 
 # LBFGSB is a gradient descent with box constraints
@@ -49,14 +49,32 @@ lower_bounds = jnp.full_like(p0, -jnp.inf)
 upper_bounds = jnp.full_like(p0, jnp.inf)
 bounds = (lower_bounds, upper_bounds)
 
+# initial fit
 result = solver.run(p0, bounds=bounds, x=ppm, y=intensity)
-
 # popt stands for optimized parameters
 popt = result.params
-
 # draws optimised summed line
 lorentzian_line = sum_lorentzians(popt, ppm)
 residuals = intensity - lorentzian_line
+
+@jit(static_argnames=['itercount'])
+def bootstrap(x, y, itercount, ipopt, residuals, bounds):
+    x_points = len(x)
+    seed = 999
+    key = jax.random.key(seed)
+    sample_indices = jax.random.randint(key, (itercount, x_points), 0, x_points)
+    sample_residuals = residuals[sample_indices]
+    sample_y = y + sample_residuals
+    results = jax.vmap(lambda ipopt, bounds, x, y:
+             solver.run(ipopt, bounds=bounds, x=x, y=y),
+             in_axes=(None, None, None, 0))(ipopt, bounds, x, sample_y)
+    return results.params
+
+test = bootstrap(ppm, lorentzian_line, 1000, popt, residuals, bounds)
+
+# 
+# calculate std error of the values
+# boom done
 # columns for output file
 columns = [ppm, lorentzian_line, residuals]
 # draws the individual lines
