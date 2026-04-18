@@ -57,18 +57,7 @@ popt = result.params
 # draws optimised summed line
 lorentzian_line = sum_lorentzians(popt, ppm)
 residuals = intensity - lorentzian_line
-for i in 1000
-for x in data
-random number num from 0 to len(data)
-get residuals[num]
-add to data[x]
 
-then solver.run
-popt = result.params
-add to an array of popts
-
-calculate std error of the values
-boom done
 # columns for output file
 columns = [ppm, lorentzian_line, residuals]
 # draws the individual lines
