@@ -36,7 +36,7 @@ export NMR_CONT="CORRECT_ALL"
 
 # Python executable
 # make sure this can call numpy and scipy
-export PYTHON="/home/jw/miniforge3/envs/nmrpipe/bin/python"
+export PYTHON="$MAMBA_ROOT_PREFIX/envs/nmrpipe/bin/python"
 
 # Processing script
 export PROC_SCRIPT="nmrproc.com"
