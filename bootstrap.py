@@ -89,17 +89,57 @@ test = bootstrap(ppm, lorentzian_line, 1000, popt, residuals, bounds)
 
 std_errors = jnp.std(test, axis=0)
 
-# Print summary to stderr (leaves stdout clean for Gnuplot)
-sys.stderr.write("\n--- FIT RESULTS & STANDARD ERRORS ---\n")
-sys.stderr.write(f"{'Peak':<6} | {'Param':<6} | {'Value':<12} | {'Std Error':<12}\n")
-sys.stderr.write("-" * 45 + "\n")
+spectrometer_freq = 470.611
 
-param_names = ['I', 'shift', 'lw']
-for i in range(len(popt)):
-    peak_idx = (i // 3) + 1
-    p_name = param_names[i % 3]
-    sys.stderr.write(f"{peak_idx:<6} | {p_name:<6} | {popt[i]:<12.6f} | {std_errors[i]:<12.6f}\n")
-sys.stderr.write("-" * 45 + "\n\n")
+# 1. Calculate Area (Integral) for the main fit: A * |gamma| * pi
+integrals = jnp.pi * popt[0::3] * jnp.abs(popt[2::3])
+
+# 2. Convert gamma (HWHM) to Hz for the main fit
+lw_hz = popt[2::3] * spectrometer_freq
+
+# 3. Calculate exact standard errors for derived values using the bootstrap matrix
+boot_A = test[:, 0::3]
+boot_gamma = test[:, 2::3]
+
+boot_integrals = jnp.pi * boot_A * jnp.abs(boot_gamma)
+integral_errors = jnp.std(boot_integrals, axis=0)
+
+lw_hz_errors = jnp.std(boot_gamma * spectrometer_freq, axis=0)
+
+# --- NEW: Calculate Relative Integrals ---
+# Calculate relative fractions for the main fit
+total_integral = jnp.sum(integrals)
+rel_integrals = integrals / total_integral
+
+# Calculate exact standard errors for relative integrals using the bootstrap matrix
+# axis=1 sums across the peaks for each of the 1000 rows
+boot_total_integrals = jnp.sum(boot_integrals, axis=1, keepdims=True)
+boot_rel_integrals = boot_integrals / boot_total_integrals
+rel_integral_errors = jnp.std(boot_rel_integrals, axis=0)
+
+# --- PRINT TERMINAL SUMMARY ---
+sys.stderr.write("\n--- RESULTS ---\n")
+# Updated table headers for the new parameters (expanded width for new column)
+sys.stderr.write(f"{'Peak':<5} | {'Intensity (A)':<15} | {'Shift (ppm)':<15} | {'lw (Hz)':<12} | {'Abs Integral':<15} | {'Rel Integral':<15}\n")
+sys.stderr.write("-" * 105 + "\n")
+
+# Loop per peak rather than per flat parameter
+for i in range(int(len(popt) / 3)):
+    peak_idx = i + 1
+
+    # Extract raw values and errors for this specific peak
+    A_val, A_err = popt[i*3], std_errors[i*3]
+    shift_val, shift_err = popt[i*3 + 1], std_errors[i*3 + 1]
+    
+    # Extract derived values and errors
+    lw_hz_val, lw_hz_err_val = lw_hz[i], lw_hz_errors[i]
+    int_val, int_err = integrals[i], integral_errors[i]
+    rel_int_val, rel_int_err = rel_integrals[i], rel_integral_errors[i]
+
+    sys.stderr.write(f"{peak_idx:<5} | {A_val:<15.6f} | {shift_val:<15.6f} | {lw_hz_val:<12.6f} | {int_val:<15.6f} | {rel_int_val:<15.6f}\n")
+    sys.stderr.write(f"{'':<5} | ±{A_err:<14.6f} | ±{shift_err:<14.6f} | ±{lw_hz_err_val:<11.6f} | ±{int_err:<14.6f} | ±{rel_int_err:<14.6f}\n")
+    sys.stderr.write("-" * 105 + "\n")
+sys.stderr.write("\n")
 
 # columns for output file
 columns = [ppm, lorentzian_line, residuals]
@@ -107,6 +147,7 @@ columns = [ppm, lorentzian_line, residuals]
 for i in range(0, len(popt), 3):
     individual = lorentzian(ppm, popt[i], popt[i+1], popt[i+2])
     columns.append(individual)
+
 
 # output
 result = np.column_stack(columns)
