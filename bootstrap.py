@@ -78,10 +78,6 @@ def bootstrap(x, y, itercount, ipopt, residuals, bounds):
     sample_indices = jax.random.randint(key, (itercount, x_points), 0, x_points)
     sample_residuals = residuals[sample_indices]
     sample_y = y + sample_residuals
-    # results = jax.vmap(lambda ipopt, bounds, x, y:
-    #          solver.run(ipopt, bounds=bounds, x=x, y=y),
-    #          in_axes=(None, None, None, 0))(ipopt, bounds, x, sample_y)
-    # return results.params
     
     def fit_single(y_sample):
         return solver.run(ipopt, bounds=bounds, x=x, y=y_sample).params
@@ -91,9 +87,20 @@ def bootstrap(x, y, itercount, ipopt, residuals, bounds):
 
 test = bootstrap(ppm, lorentzian_line, 1000, popt, residuals, bounds)
 
-# 
-# calculate std error of the values
-# boom done
+std_errors = jnp.std(test, axis=0)
+
+# Print summary to stderr (leaves stdout clean for Gnuplot)
+sys.stderr.write("\n--- FIT RESULTS & STANDARD ERRORS ---\n")
+sys.stderr.write(f"{'Peak':<6} | {'Param':<6} | {'Value':<12} | {'Std Error':<12}\n")
+sys.stderr.write("-" * 45 + "\n")
+
+param_names = ['I', 'shift', 'lw']
+for i in range(len(popt)):
+    peak_idx = (i // 3) + 1
+    p_name = param_names[i % 3]
+    sys.stderr.write(f"{peak_idx:<6} | {p_name:<6} | {popt[i]:<12.6f} | {std_errors[i]:<12.6f}\n")
+sys.stderr.write("-" * 45 + "\n\n")
+
 # columns for output file
 columns = [ppm, lorentzian_line, residuals]
 # draws the individual lines
@@ -104,4 +111,3 @@ for i in range(0, len(popt), 3):
 # output
 result = np.column_stack(columns)
 np.savetxt(sys.stdout, result, fmt='%.6f')
-print(test)
