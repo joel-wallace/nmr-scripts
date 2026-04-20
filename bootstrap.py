@@ -85,7 +85,7 @@ def bootstrap(x, y, itercount, ipopt, residuals, bounds):
     results = jax.lax.map(fit_single, sample_y)
     return results
 
-test = bootstrap(ppm, lorentzian_line, 1000, popt, residuals, bounds)
+test = bootstrap(ppm, lorentzian_line, 200, popt, residuals, bounds)
 
 std_errors = jnp.std(test, axis=0)
 
@@ -106,7 +106,6 @@ integral_errors = jnp.std(boot_integrals, axis=0)
 
 lw_hz_errors = jnp.std(boot_gamma * spectrometer_freq, axis=0)
 
-# --- NEW: Calculate Relative Integrals ---
 # Calculate relative fractions for the main fit
 total_integral = jnp.sum(integrals)
 rel_integrals = integrals / total_integral
