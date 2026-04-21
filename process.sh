@@ -31,12 +31,12 @@ EOF
 
 echo "Written to $WD/$OUT_NAME"
 
-gnuplot -p <<EOF
-set title "$OUT_NAME"
-set xlabel 'ppm'
-set xrange [-50:-70]
-plot "$OUT_NAME" with lines title 'Processed Spectrum'
-EOF
+#gnuplot -p <<EOF
+#set title "$OUT_NAME"
+#set xlabel 'ppm'
+#set xrange [-50:-70]
+#plot "$OUT_NAME" with lines title 'Processed Spectrum'
+#EOF
 
 $PYTHON $MASTER/baseline.py $EXCLUDE_LEFT $EXCLUDE_RIGHT < $OUT_NAME > $BASELINED_NAME
 
