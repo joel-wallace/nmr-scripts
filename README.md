@@ -6,3 +6,5 @@
 6) ./process.sh
 7) keep the plot open, edit the initial paramaters in bootstrap.py
 8) ./fit.sh
+
+can run ./timecourse.sh any time after ./convert.sh
