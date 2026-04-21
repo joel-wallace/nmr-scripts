@@ -6,6 +6,8 @@ echo "Processing $WD/test.fid"
 
 cd $WD
 
+NORM=$(($NS * $SAMPLE_CONC))
+
 # LB: Hz
 # Zero-fill, double-size, round to power of 2
 # Fourier transform
@@ -15,12 +17,13 @@ cd $WD
 
 tcsh <<EOF
     nmrPipe -in $FID_NAME \
-    | nmrPipe -fn EM -lb $LB -c 0.5               \
-    | nmrPipe  -fn ZF -auto                        \
-    | nmrPipe  -fn FT -auto                        \
-    | nmrPipe  -fn PS -p0 $P0 -p1 $P1 -di -verb   \
-    | nmrPipe -fn BASE -nw 10 -nl -70ppm -50ppm    \
-    | nmrPipe -fn EXT -x1 -70ppm -xn -50ppm -sw    \
+    | nmrPipe -fn EM -lb $LB -c 0.5              \
+    | nmrPipe -fn MULT -c $NORM -inv             \
+    | nmrPipe -fn ZF -auto                       \
+    | nmrPipe -fn FT -auto                       \
+    | nmrPipe -fn PS -p0 $P0 -p1 $P1 -di -verb   \
+    | nmrPipe -fn BASE -nw 10 -nl -70ppm -50ppm  \
+    | nmrPipe -fn EXT -x1 -70ppm -xn -50ppm -sw  \
        -ov -out $FT1_NAME
     
     pipe2txt.tcl -index ppm $FT1_NAME > $OUT_NAME
