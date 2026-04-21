@@ -14,6 +14,10 @@ export NUM_PEAKS=3
 # exclude the peaks for baselining
 export EXCLUDE_LEFT=-59
 export EXCLUDE_RIGHT=-65
+# for normalization
+export NS=2048
+# in uM
+export SAMPLE_CONC=20
 
 
 # Directory where the NMR experiments 1, 2, 3 etc are stored
