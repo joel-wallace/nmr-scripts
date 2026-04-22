@@ -34,35 +34,17 @@ def sum_lorentzians(params, x):
 
 # aim to minimise residuals (return value)
 @jit
-def loss_function(params, x, y):
+def residuals_function(params, x, y):
     current_fit = sum_lorentzians(params, x)
-    return jnp.sum((current_fit - y)**2)
+    return current_fit - y
 
 # user guesses
-p0 = jnp.array([50, -61.75, 0.2, 20, -62.75, 0.15, 10, -61.75, 0.8, 10, -62.75, 0.8])
+p0 = jnp.array([0.08, -61.85, 0.05, 0.03, -62.67, 0.05, 0.022, -61.85, 0.3, 0.022, -62.67, 0.3])
 
-# LBFGSB is a gradient descent with box constraints
-# it allows setting bounds e.g. so that amplitude is not negative
-solver = jaxopt.LBFGSB(fun=loss_function)
+solver = jaxopt.LevenbergMarquardt(residual_fun=residuals_function)
 
-lower_bounds = jnp.zeros_like(p0)
-
-# A bounds
-lower_bounds = lower_bounds.at[0::3].set(-jnp.inf)
-
-# x0 bounds
-lower_bounds = lower_bounds.at[1::3].set(-jnp.inf)
-
-# gamma bounds
-lower_bounds = lower_bounds.at[2::3].set(-jnp.inf)
-
-# Upper bounds remain infinite
-upper_bounds = jnp.full_like(p0, jnp.inf)
-
-# Final bounds tuple for the solver
-bounds = (lower_bounds, upper_bounds)
 # initial fit
-result = solver.run(p0, bounds=bounds, x=ppm, y=intensity)
+result = solver.run(p0, x=ppm, y=intensity)
 # popt stands for optimized parameters
 popt = result.params
 # draws optimised summed line
@@ -70,8 +52,8 @@ lorentzian_line = sum_lorentzians(popt, ppm)
 residuals = intensity - lorentzian_line
 
 @jit(static_argnames=['itercount'])
-def bootstrap(x, y, itercount, ipopt, residuals, bounds):
-    solver = jaxopt.LBFGSB(fun=loss_function)
+def bootstrap(x, y, itercount, ipopt, residuals):
+    solver = jaxopt.LevenbergMarquardt(residual_fun=residuals_function)
     x_points = len(x)
     seed = 999
     key = jax.random.key(seed)
@@ -80,12 +62,12 @@ def bootstrap(x, y, itercount, ipopt, residuals, bounds):
     sample_y = y + sample_residuals
     
     def fit_single(y_sample):
-        return solver.run(ipopt, bounds=bounds, x=x, y=y_sample).params
+        return solver.run(ipopt, x=x, y=y_sample).params
 
     results = jax.lax.map(fit_single, sample_y)
     return results
 
-test = bootstrap(ppm, lorentzian_line, 200, popt, residuals, bounds)
+test = bootstrap(ppm, lorentzian_line, 200, popt, residuals)
 
 std_errors = jnp.std(test, axis=0)
 
