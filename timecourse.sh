@@ -37,8 +37,6 @@ cd $WD/timecourse/
 
 bltxt_files=""
 
-NORM=$(($NS * $SAMPLE_CONC))
-
 for fid in *.fid; do
     ft1=$(echo $fid | sed 's/\.fid$/.ft1/'); 
     txt=$(echo $fid | sed 's/\.fid$/.txt/'); 
@@ -46,7 +44,6 @@ for fid in *.fid; do
     tcsh <<EOF
         nmrPipe -in $fid \
         | nmrPipe -fn EM -lb $LB -c 0.5              \
-        | nmrPipe -fn MULT -c $NORM -inv             \
         | nmrPipe  -fn ZF -auto                      \
         | nmrPipe  -fn FT -auto                      \
         | nmrPipe  -fn PS -p0 $P0 -p1 $P1 -di -verb  \
