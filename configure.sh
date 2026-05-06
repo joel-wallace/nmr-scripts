@@ -22,6 +22,7 @@ export SAMPLE_CONC=20
 
 # Directory where the NMR experiments 1, 2, 3 etc are stored
 export WD=$PWD/..
+export OUT_DIR="$WD/output"
 
 # Directory containing the scripts (where this script is stored)
 export MASTER=$PWD
