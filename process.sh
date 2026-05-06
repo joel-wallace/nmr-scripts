@@ -6,8 +6,6 @@ echo "Processing $OUT_DIR/test.fid"
 
 cd $OUT_DIR
 
-NORM=$(($NS * $SAMPLE_CONC))
-
 # LB: Hz
 # Zero-fill, double-size, round to power of 2
 # Fourier transform

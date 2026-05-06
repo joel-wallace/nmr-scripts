@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p $OUT_DIR
+
 SECOND=$((FIRST + 1))
 
 tcsh <<EOF

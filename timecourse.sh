@@ -3,6 +3,15 @@
 export STRIDE=4
 
 EXPS=($(seq $FIRST $LAST))
+
+REMAINDER=$(bc <<< "${#EXPS[@]}%$STRIDE")
+echo "$STRIDE not a multiple of ${#EXPS[@]}, discarding $REMAINDER exps from the end"
+
+if [ $REMAINDER -gt 0 ]; then
+    for i in $(seq 1 $REMAINDER); do
+        unset EXPS[-1]
+    done
+fi
 echo "${#EXPS[@]} exps, $STRIDE at a time"
 
 COUNTER=0 # the number of the experiment
@@ -55,7 +64,7 @@ for fid in *.fid; do
         echo $txt
 EOF
     $PYTHON $MASTER/baseline.py $EXCLUDE_LEFT $EXCLUDE_RIGHT < $txt > $bltxt
-    echo $bltxt
+    #echo $bltxt
     bltxt_files="$bltxt_files $bltxt"
 done
 echo $bltxt_files
@@ -63,3 +72,38 @@ gnuplot -p <<EOF
     set xrange [-60:-64]
     plot for [file in "$bltxt_files"] file with lines title file
 EOF
+
+for txt_file in $bltxt_files; do
+    fit_file="$(basename $txt_file _bl.txt)_fit.txt"
+    cat $txt_file
+    $PYTHON $MASTER/fit.py $NUM_PEAKS < $txt_file > $fit_file
+    gnuplot -p <<EOF
+        set title "$FID_NAME"
+        set xlabel '19F (ppm)'
+        set xrange [-60:-65]
+        set grid ytics lc rgb "#eeeeee"
+        
+        set multiplot layout 2,1
+        
+        set size 1.0, 0.7
+        set origin 0.0, 0.3
+        set ylabel 'Intensity'
+        set xlabel '19F (ppm)'
+        
+        plot "$txt_file" u 1:2 w lines lc rgb "#bbbbbb" lw 1 title "Exp. Data", \
+             "$fit_file" u 1:2 w lines lc rgb "blue" lw 2 title "Total Fit", \
+             "$fit_file" u 1:4 w lines dt 2 lc rgb "red" title "Peak 1", \
+             "$fit_file" u 1:5 w lines dt 2 lc rgb "green" title "Peak 2", \
+             "$fit_file" u 1:6 w lines dt 2 lc rgb "orange" title "Peak 3", \
+             "$fit_file" u 1:7 w lines dt 2 lc rgb "purple" title "Peak 4"
+        
+        set size 1.0, 0.3
+        set origin 0.0, 0.0
+        set ylabel 'Residuals'
+        unset xlabel
+        plot "$fit_file" u 1:3 w lines lc rgb "gray" title "Residuals"
+        
+        unset multiplot
+EOF
+    
+done
