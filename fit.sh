@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-cd $WD
+cd $OUT_DIR
 
 $PYTHON $MASTER/lorentzian.py $NUM_PEAKS < $BASELINED_NAME > $FIT_NAME
 

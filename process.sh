@@ -2,9 +2,9 @@
 
 SCRIPT=$PROC_SCRIPT
 
-echo "Processing $WD/test.fid"
+echo "Processing $OUT_DIR/test.fid"
 
-cd $WD
+cd $OUT_DIR
 
 NORM=$(($NS * $SAMPLE_CONC))
 
@@ -18,7 +18,6 @@ NORM=$(($NS * $SAMPLE_CONC))
 tcsh <<EOF
     nmrPipe -in $FID_NAME \
     | nmrPipe -fn EM -lb $LB -c 0.5              \
-    | nmrPipe -fn MULT -c $NORM -inv             \
     | nmrPipe -fn ZF -auto                       \
     | nmrPipe -fn FT -auto                       \
     | nmrPipe -fn PS -p0 $P0 -p1 $P1 -di -verb   \
@@ -29,7 +28,7 @@ tcsh <<EOF
     pipe2txt.tcl -index ppm $FT1_NAME > $OUT_NAME
 EOF
 
-echo "Written to $WD/$OUT_NAME"
+echo "Written to $OUT_DIR/$OUT_NAME"
 
 #gnuplot -p <<EOF
 #set title "$OUT_NAME"
@@ -40,7 +39,7 @@ echo "Written to $WD/$OUT_NAME"
 
 $PYTHON $MASTER/baseline.py $EXCLUDE_LEFT $EXCLUDE_RIGHT < $OUT_NAME > $BASELINED_NAME
 
-echo "Written to $WD/$BASELINED_NAME"
+echo "Written to $OUT_DIR/$BASELINED_NAME"
 
 gnuplot -p <<EOF
     set title "$BASELINED_NAME"
