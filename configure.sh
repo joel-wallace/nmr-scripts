@@ -3,7 +3,7 @@
 # PROCESSING PARAMETERS
 # first and last experiments to sum
 export FIRST=3
-export LAST=19
+export LAST=23
 # phasing, probably don't use P1
 export P0=-24
 export P1=0
