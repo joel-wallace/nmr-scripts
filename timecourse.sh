@@ -37,18 +37,21 @@ cd $WD/timecourse/
 
 bltxt_files=""
 
+NORM=$(($NS * $SAMPLE_CONC))
+
 for fid in *.fid; do
     ft1=$(echo $fid | sed 's/\.fid$/.ft1/'); 
     txt=$(echo $fid | sed 's/\.fid$/.txt/'); 
     bltxt=$(echo $fid | sed 's/\.fid$/_bl.txt/'); 
     tcsh <<EOF
         nmrPipe -in $fid \
-        | nmrPipe -fn EM -lb $LB -c 0.5               \
-        | nmrPipe  -fn ZF -auto                        \
-        | nmrPipe  -fn FT -auto                        \
-        | nmrPipe  -fn PS -p0 $P0 -p1 $P1 -di -verb   \
-        | nmrPipe -fn BASE -nw 10 -nl -70ppm -50ppm    \
-        | nmrPipe -fn EXT -x1 -70ppm -xn -50ppm -sw    \
+        | nmrPipe -fn EM -lb $LB -c 0.5              \
+        | nmrPipe -fn MULT -c $NORM -inv             \
+        | nmrPipe  -fn ZF -auto                      \
+        | nmrPipe  -fn FT -auto                      \
+        | nmrPipe  -fn PS -p0 $P0 -p1 $P1 -di -verb  \
+        | nmrPipe -fn BASE -nw 10 -nl -70ppm -50ppm  \
+        | nmrPipe -fn EXT -x1 -70ppm -xn -50ppm -sw  \
            -ov -out $ft1
         echo $ft1
         pipe2txt.tcl -index ppm $ft1 > $txt
